@@ -25,7 +25,7 @@ function init() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    camera.position.set(0, 80, 150);
+    camera.position.set(0, 110, 150);
     camera.lookAt(scene.position);
 
     // Initialize OrbitControls
@@ -56,7 +56,7 @@ function init() {
     scene.fog = new THREE.FogExp2(0x10101, 0.0013); // Exponential fog, very subtle
 
     // Adding a nightsky background
-    function addSkyboxWithSingleImage(scene) {
+    function addSkybox(scene) {
         const skyboxSize = bounds;
         const skyboxGeometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
         const loader = new THREE.TextureLoader();
@@ -78,7 +78,7 @@ function init() {
             }
         );
     }
-    addSkyboxWithSingleImage(scene);
+    addSkybox(scene);
     
     // Creating Ground
     function createSnowyGround() {
@@ -86,7 +86,6 @@ function init() {
         const material = new THREE.MeshLambertMaterial({ color: 0xf0f8ff }); // Soft white color
         const ground = new THREE.Mesh(geometry, material);
         ground.rotation.x = -Math.PI / 2; // Rotate the plane to be horizontal
-        ground.position.y = -20; // Adjust the vertical position to be below Santa
         return ground;
     }
     const snowyGround = createSnowyGround();
@@ -94,18 +93,24 @@ function init() {
 
     // Creating Tree
     function createTree() {
-        const coneGeometry = new THREE.ConeGeometry(5, 20, 32); // Cone for the leaves
-        const cylinderGeometry = new THREE.CylinderGeometry(2, 2, 10, 32); // Cylinder for the trunk
+        const leavesGeometry = new THREE.ConeGeometry(5, 20, 32); // Cone for the leaves
+        const snowGeometry = new THREE.ConeGeometry(5, 20, 32); // Cone for the snow on top of the leaves
+        const trunkGeometry = new THREE.CylinderGeometry(2, 2, 30, 32); // Cylinder for the trunk
         const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x006400 }); // Dark green
+        const snowMaterial = new THREE.MeshLambertMaterial({ color: 0xFFFFFF }); // White
         const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 }); // Brown
         
-        const leaves = new THREE.Mesh(coneGeometry, leafMaterial);
+        const leaves = new THREE.Mesh(leavesGeometry, leafMaterial);
         leaves.position.y = 15; // Halfway up the trunk
         
-        const trunk = new THREE.Mesh(cylinderGeometry, trunkMaterial);
+        const snow = new THREE.Mesh(snowGeometry, snowMaterial);
+        snow.position.y = 17;
+
+        const trunk = new THREE.Mesh(trunkGeometry, trunkMaterial);
         
         const tree = new THREE.Group();
         tree.add(leaves);
+        tree.add(snow);
         tree.add(trunk);
         
         tree.isTree = true;
@@ -117,7 +122,7 @@ function init() {
     function addTrees(scene, numberOfTrees) {
         for (let i = 0; i < numberOfTrees; i++) {
             const tree = createTree();
-            tree.position.y = -15;
+            tree.position.y = Math.random() * 15;
             tree.position.x = Math.random() * bounds - bounds/2; // Random position within bounds
             tree.position.z = Math.random() * bounds - bounds/2;
             scene.add(tree);
@@ -127,7 +132,7 @@ function init() {
 
     // Creating snowfall
     function createSnowfall(scene) {
-        const particleCount = 1000; // Number of particles
+        const particleCount = 10000; // Number of particles
         const positions = new Float32Array(particleCount * 3); // Each particle has an x, y, and z coordinate
     
         // Bounds of the snowfall area
@@ -250,7 +255,7 @@ function init() {
         let y = params.amplitudeY * Math.sin(params.frequencyY * t + params.phaseY);
         let z = params.amplitudeZ * Math.sin(params.frequencyZ * t + params.phaseZ);
 
-        santa.position.set(x, y+50, z);
+        santa.position.set(x, y+80, z);
 
         params.amplitudeX *= params.dampingX;
         params.amplitudeS *= params.dampingS;
