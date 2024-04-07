@@ -130,6 +130,97 @@ function init() {
     }
     addTrees(scene, bounds);
 
+    function createSnowman() {
+        const bottomSphereGeometry = new THREE.SphereGeometry(10, 32, 32); 
+        const middleSphereGeometry = new THREE.SphereGeometry(10 * 0.66, 32, 32); 
+        const topSphereGeometry = new THREE.SphereGeometry(10 * 0.33, 32, 32); 
+        const material = new THREE.MeshLambertMaterial({ color: 0xFFFFFF }); 
+    
+        const bottomSphere = new THREE.Mesh(bottomSphereGeometry, material);
+        bottomSphere.position.y = 10;
+        
+        const middleSphere = new THREE.Mesh(middleSphereGeometry, material);
+        middleSphere.position.y = 20;
+        
+        const topSphere = new THREE.Mesh(topSphereGeometry, material);
+        topSphere.position.y = 28;
+    
+        // Carrot nose
+        const noseGeometry = new THREE.CylinderGeometry(0.4, 1.5, 6, 32);
+        const noseMaterial = new THREE.MeshLambertMaterial({ color: 0xFF8C00 }); 
+        const nose = new THREE.Mesh(noseGeometry, noseMaterial);
+        nose.position.y = 28; 
+        nose.position.z = 10 * 0.33 + 3;
+        nose.rotation.x = Math.PI / 2;
+    
+        // Top hat brim
+        const hatBrimGeometry = new THREE.CylinderGeometry(5, 5, 1, 32);
+        const hatMaterial = new THREE.MeshLambertMaterial({ color: 0x333333 });
+        const hatBrim = new THREE.Mesh(hatBrimGeometry, hatMaterial);
+        hatBrim.position.y = 31;
+    
+        // Top hat body
+        const hatBodyGeometry = new THREE.CylinderGeometry(3, 3, 7, 32);
+        const hatBody = new THREE.Mesh(hatBodyGeometry, hatMaterial);
+        hatBody.position.y = 35;
+
+        // Left arm
+        const armGeometry = new THREE.CylinderGeometry(0.2, 0.2, 12, 32);
+        const armMaterial = new THREE.MeshLambertMaterial({ color: 0x8B4513 });
+        const leftArm = new THREE.Mesh(armGeometry, armMaterial);
+        leftArm.position.set(-8, 18, 0);
+        leftArm.rotation.z = Math.PI / 4;
+
+        // Right arm
+        const rightArm = new THREE.Mesh(armGeometry, armMaterial);
+        rightArm.position.set(8, 18, 0);
+        rightArm.rotation.z = -Math.PI / 4; 
+
+        const buttonMaterial = new THREE.MeshLambertMaterial({ color: 0x000000 });
+        const buttonRadius = 0.75; 
+        const buttonGeometry = new THREE.SphereGeometry(buttonRadius, 32, 32);
+
+        const buttonPositions = [
+            { x: 0, y: 25, z: 4 }, // Top button on the middle sphere
+            { x: 0, y: 20, z: 6.5 }, // Middle button on the middle sphere
+            { x: 0, y: 15, z: 8.5 }, // Bottom button on the middle sphere
+            { x: 0, y: 10, z: 9.75 }, // Top button on the bottom sphere
+            { x: 0, y: 5, z: 8.75 }   // Bottom button on the bottom sphere
+        ];
+
+        const buttons = buttonPositions.map(pos => {
+            const button = new THREE.Mesh(buttonGeometry, buttonMaterial);
+            button.position.set(pos.x, pos.y, pos.z);
+            return button;
+        });
+    
+        const snowman = new THREE.Group();
+        snowman.add(bottomSphere);
+        snowman.add(middleSphere);
+        snowman.add(topSphere);
+        snowman.add(nose);
+        snowman.add(hatBrim);
+        snowman.add(hatBody);
+        snowman.add(leftArm);
+        snowman.add(rightArm);
+        buttons.forEach(button => snowman.add(button));
+
+        snowman.isSnowman = true;
+    
+        return snowman;
+    }
+    
+    function addSnowmen(scene, numberOfSnowmen) {
+        for (let i = 0; i < numberOfSnowmen; i++) {
+                const snowman = createSnowman();
+                snowman.position.y = 0;
+                snowman.position.x = Math.random() * bounds - bounds/2; 
+                snowman.position.z = Math.random() * bounds - bounds/2;
+                scene.add(snowman);
+        }
+    }
+    addSnowmen(scene, 100);
+
     // Creating snowfall
     function createSnowfall(scene) {
         const particleCount = 10000; // Number of particles
@@ -253,9 +344,9 @@ function init() {
 
         // Move trees to simulate Santa moving forward
         scene.traverse(function(object) {
-            if (object.isTree) { // Ensure you set this flag when creating trees
+            if (object.isTree || object.isSnowman) { // Check for both trees and snowmen
                 object.position.x += 0.5; // Adjust speed as necessary
-                if (object.position.x > bounds/2) { // Assuming 1000 is the boundary of your scene along the z-axis
+                if (object.position.x > bounds/2) {
                     object.position.x = -bounds/2;
                 }
             }
