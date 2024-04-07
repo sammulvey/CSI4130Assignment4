@@ -14,6 +14,18 @@ let santa = 0;
 var bounds = 2000;
 const loader = new GLTFLoader();
 
+const textureLoader = new THREE.TextureLoader();
+const wrappingPaperTexture1 = textureLoader.load('./presents/goldpresent.png');
+const wrappingPaperTexture2 = textureLoader.load('./presents/greenpresent.png');
+const wrappingPaperTexture3 = textureLoader.load('./presents/redpresent.png');
+const wrappingPaperTexture4 = textureLoader.load('./presents/redgreenpresent.png');
+const wrappingPaperTexture5 = textureLoader.load('./presents/bluepresent.png');
+const wrappingPaperTexture6 = textureLoader.load('./presents/bluegreenpresent.png');
+const wrappingPaperTexture7 = textureLoader.load('./presents/bluewhitepresent.png');
+const wrappingPaperTexture8 = textureLoader.load('./presents/blackpresent.png');
+
+const wrappingPaperTextures = [wrappingPaperTexture1, wrappingPaperTexture2, wrappingPaperTexture3, wrappingPaperTexture4, wrappingPaperTexture5, wrappingPaperTexture6, wrappingPaperTexture7, wrappingPaperTexture8];
+
 function init() {
 
     // Camera setup
@@ -112,23 +124,13 @@ function init() {
         tree.add(leaves);
         tree.add(snow);
         tree.add(trunk);
+
+        tree.position.y = Math.random() * 15;
         
         tree.isTree = true;
 
         return tree;
     }
-
-    // Tree position randomizer, allows for manipulation of number of trees
-    function addTrees(scene, numberOfTrees) {
-        for (let i = 0; i < numberOfTrees; i++) {
-            const tree = createTree();
-            tree.position.y = Math.random() * 15;
-            tree.position.x = Math.random() * bounds - bounds/2; // Random position within bounds
-            tree.position.z = Math.random() * bounds - bounds/2;
-            scene.add(tree);
-        }
-    }
-    addTrees(scene, bounds);
 
     function createSnowman() {
         const bottomSphereGeometry = new THREE.SphereGeometry(10, 32, 32); 
@@ -205,25 +207,78 @@ function init() {
         snowman.add(rightArm);
         buttons.forEach(button => snowman.add(button));
 
+        snowman.rotation.y = Math.random() * 2 * Math.PI;
+
         snowman.isSnowman = true;
     
         return snowman;
     }
-    
-    function addSnowmen(scene, numberOfSnowmen) {
-        for (let i = 0; i < numberOfSnowmen; i++) {
-                const snowman = createSnowman();
-                snowman.position.y = 0;
-                snowman.position.x = Math.random() * bounds - bounds/2; 
-                snowman.position.z = Math.random() * bounds - bounds/2;
-                scene.add(snowman);
+
+    function createPresent() {
+
+        const size = Math.random() * 3 + 2; // Presents will have their sizes ranging from 2 to 4
+
+        // Box
+        const selectedTexture = wrappingPaperTextures[Math.floor(Math.random() * wrappingPaperTextures.length)];
+
+        const boxGeometry = new THREE.BoxGeometry(size, size, size);
+        const boxMaterial = new THREE.MeshLambertMaterial({ map: selectedTexture });
+        const box = new THREE.Mesh(boxGeometry, boxMaterial);
+
+        // Bow
+        const bow = new THREE.Group();
+
+        const ribbonMaterial = new THREE.MeshLambertMaterial({ color: 0xFFD700 }); // Gold color for the ribbon
+
+        const bowCircleGeometry = new THREE.SphereGeometry(0.3, 32, 32);
+        const bowCircle = new THREE.Mesh(bowCircleGeometry, ribbonMaterial);
+
+        bow.add(bowCircle);
+
+        const loopGeometry = new THREE.TorusGeometry(0.3, 0.06, 16, 100);
+        const loopLeft = new THREE.Mesh(loopGeometry, ribbonMaterial);
+        const loopRight = new THREE.Mesh(loopGeometry, ribbonMaterial);
+        loopLeft.position.x = -0.4
+        loopLeft.position.y += 0.15
+        loopRight.position.x = 0.4
+        loopRight.position.y += 0.15
+
+        bow.add(loopLeft);
+        bow.add(loopRight);
+
+        bow.position.y = size / 2 + size * 0.05; // Adjusted so it sits on top of the present
+
+        // Grouping the present parts together
+        const present = new THREE.Group();
+        present.add(box);
+        present.add(bow); 
+        
+        present.position.y = size / 2; // Adjust so the bottom of the present sits on the ground
+        present.rotation.y = Math.random() * 2 * Math.PI; // Randomize their rotation
+        
+        present.isPresent = true;
+
+        return present;
+    }
+
+    // Generalized function for randomizing positions of objects added to the scene
+    function addObject(scene, number, func) {
+        for (let i = 0; i < number; i++) {
+            const obj = func();
+            obj.position.x = Math.random() * bounds - bounds/2; 
+            obj.position.z = Math.random() * bounds - bounds/2;
+            scene.add(obj);
         }
     }
-    addSnowmen(scene, 100);
+
+    // Calling to add all the different objects
+    addObject(scene, bounds, createTree); // Adds trees to the scene
+    addObject(scene, bounds/16, createSnowman); // Adds snowmen to the scene
+    addObject(scene, bounds/4, createPresent); // Adds presents to the scene
 
     // Creating snowfall
     function createSnowfall(scene) {
-        const particleCount = 10000; // Number of particles
+        const particleCount = 5000; // Number of particles
         const positions = new Float32Array(particleCount * 3); // Each particle has an x, y, and z coordinate
     
         // Bounds of the snowfall area
@@ -344,8 +399,8 @@ function init() {
 
         // Move trees to simulate Santa moving forward
         scene.traverse(function(object) {
-            if (object.isTree || object.isSnowman) { // Check for both trees and snowmen
-                object.position.x += 0.5; // Adjust speed as necessary
+            if (object.isTree || object.isSnowman || object.isPresent) { // Check for both trees and snowmen
+                object.position.x += 0.0; // Adjust speed as necessary
                 if (object.position.x > bounds/2) {
                     object.position.x = -bounds/2;
                 }
