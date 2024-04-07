@@ -163,9 +163,21 @@ function init() {
     
         for (let i = 0; i < count; i++) {
             positions[i * 3 + 1] -= 1; // Move each snowflake down along the y-axis
+            
+            // Skew snowflake in the x direction to simulate wind or movement
+            positions[i * 3] += 0.2; // Adjust this value to control the skew strength
     
+            // Reset snowflake to top of the scene if it falls below 0
             if (positions[i * 3 + 1] < 0) {
-                positions[i * 3 + 1] = 200; // Reset snowflake to top of the scene if it falls below 0
+                positions[i * 3 + 1] = 200; // Reset y to top
+                positions[i * 3] = Math.random() * bounds - bounds / 2; // Randomize x position for variety
+            }
+            
+            // Loop snowflake x position if it goes beyond bounds, simulating continuous space
+            if (positions[i * 3] > bounds / 2) {
+                positions[i * 3] = -bounds / 2;
+            } else if (positions[i * 3] < -bounds / 2) {
+                positions[i * 3] = bounds / 2;
             }
         }
     
