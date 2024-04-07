@@ -1,0 +1,47 @@
+cd<!DOCTYPE html>
+ <!-- 
+ ==========================================================================
+ $Id: camera.html,v 1.1 2020/02/12 05:07:30 jlang Exp $
+ Simple html page to experiment with Three.js 
+ ==========================================================================
+ (C)opyright:
+
+   Jochen Lang
+   EECS, University of Ottawa
+   800 King Edward Ave.
+   Ottawa, On., K1N 6N5
+   Canada.
+   http:www.eecs.uottawa.ca
+
+ Creator: jlang (Jochen Lang)
+ Email:   jlang@uottawa.ca
+ ==========================================================================
+ $Log: camera.html,v $
+ Revision 1.1  2020/02/12 05:07:30  jlang
+ Intermediate draft.
+
+  ========================================================================== 
+-->
+<html>
+  <head>
+    <title>CSI4130 Laboratory 4</title>
+    <style>
+        body {
+            /* set margin to 0 and overflow to hidden, to go fullscreen */
+            margin: 0;
+            overflow: hidden;
+        }
+    </style>
+    <script type="importmap">
+      {
+        "imports": {
+        "three": "../../node_modules/three/build/three.module.js",
+        "three/addons/": "../../node_modules/three/examples/jsm/",
+        "dat.gui": "../../node_modules/dat.gui/build/dat.gui.module.js"
+        }
+      }
+      </script>
+</head>
+    <script type=module src="harmonograph.js"></script>
+  </body>
+</html>
