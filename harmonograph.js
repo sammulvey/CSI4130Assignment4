@@ -49,7 +49,7 @@ function init() {
     // Loading Santaclause from santa_claus folder
     loader.load( './santa_claus/scene.gltf', function ( gltf ) {
         santa = gltf.scene
-        santa.scale.set(5, 5, 5);
+        santa.rotation.y = Math.PI;
         scene.add(santa);
     }, undefined, function ( error ) {
         console.error( error );
@@ -336,6 +336,7 @@ function init() {
         amplitudeY: 15, frequencyY: 3, phaseY: 0.0, dampingY: 0.9999,
         amplitudeZ: 5,  frequencyZ: 1.8, phaseZ: 0.5, dampingZ: 0.9999,
         amplitudeS: 5, frequencyS: 2, phaseS: 0.0, dampingS: 0.9999,
+        sceneSpeed: 0.5,
         reset: function() {
             t = 0;
             this.amplitudeX = 10; this.frequencyX = 2; this.phaseX = 0.0; this.dampingX = 0.9999;
@@ -388,6 +389,7 @@ function init() {
     }
 
     gui.add(params, 'reset').name('Reset Animation');
+    gui.add(params, 'sceneSpeed', 0, 1).name('Scene Speed');
 
     function animate() {
 
@@ -400,7 +402,7 @@ function init() {
         // Move trees to simulate Santa moving forward
         scene.traverse(function(object) {
             if (object.isTree || object.isSnowman || object.isPresent) { // Check for both trees and snowmen
-                object.position.x += 0.0; // Adjust speed as necessary
+                object.position.x += 1 * params.sceneSpeed; // Now affected by the slider
                 if (object.position.x > bounds/2) {
                     object.position.x = -bounds/2;
                 }

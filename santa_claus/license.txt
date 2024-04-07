@@ -1,11 +1,11 @@
 Model Information:
-* title:	Santa Claus
-* source:	https://sketchfab.com/3d-models/santa-claus-fff7fc4dd7b84e0992ffbb10aeb4a3b1
-* author:	MATB (https://sketchfab.com/alcides.tamaca)
+* title:	Santa Sleigh
+* source:	https://sketchfab.com/3d-models/santa-sleigh-66f26af7f6f94c58887e3aabb684b0f4
+* author:	Akinremi (https://sketchfab.com/Akinremi)
 
 Model License:
 * license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
 * requirements:	Author must be credited. Commercial use is allowed.
 
 If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
-This work is based on "Santa Claus" (https://sketchfab.com/3d-models/santa-claus-fff7fc4dd7b84e0992ffbb10aeb4a3b1) by MATB (https://sketchfab.com/alcides.tamaca) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+This work is based on "Santa Sleigh" (https://sketchfab.com/3d-models/santa-sleigh-66f26af7f6f94c58887e3aabb684b0f4) by Akinremi (https://sketchfab.com/Akinremi) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
