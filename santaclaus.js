@@ -407,8 +407,8 @@ function init() {
 
         // Move trees to simulate Santa moving forward
         scene.traverse(function(object) {
-            if (object.isTree || object.isSnowman || object.isPresent) { // Check for both trees and snowmen
-                object.position.x += 1 * params.sceneSpeed; // Now affected by the slider
+            if (object.isTree || object.isSnowman || object.isPresent) { // Moves trees, snowmen, and presents.
+                object.position.x += 1 * params.sceneSpeed;
                 if (object.position.x > bounds/2) {
                     object.position.x = -bounds/2;
                 }
