@@ -1,85 +1,192 @@
-// Sam Mulvey
-// 300201795
-// Assignment 2
+// Sam Mulvey, Alexander Hawke
+// 300201795, 300194736
+// Assignment 4
 
 import * as THREE from 'three';
 import { GUI } from 'dat.gui';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-let topCamera = 0;
-let frontCamera = 0;
+
+let camera = 0;
 let renderer = 0;
 let t = 0;
-let dysonSphere = 0;
+let santa = 0;
 const loader = new GLTFLoader();
 
 function init() {
 
     var scene = new THREE.Scene();
-    frontCamera = new THREE.PerspectiveCamera(75, window.innerWidth / 2 / window.innerHeight, 0.1, 1000);
-    topCamera = new THREE.PerspectiveCamera(75, window.innerWidth / 2 / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
     renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
     renderer.autoClearColor = false;
+    renderer.setClearColor(0x8EC8E8);
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    frontCamera.position.set(0, 0, 75);
-    topCamera.position.set(0, 75, 0);
-    topCamera.lookAt(scene.position);
+    camera.position.set(0, 80, 150);
+    camera.lookAt(scene.position);
 
-    frontCamera.aspect = window.innerWidth / 2 / window.innerHeight;
-    frontCamera.updateProjectionMatrix();
-    topCamera.aspect = window.innerWidth / 2 / window.innerHeight;
-    topCamera.updateProjectionMatrix();
+    // Initialize OrbitControls
+    const controls = new OrbitControls(camera, renderer.domElement);
 
-    loader.load( 'scene.gltf', function ( gltf ) {
-        dysonSphere = gltf.scene
-        dysonSphere.scale.set(0.3, 0.3, 0.3);
-        scene.add(dysonSphere);
+    camera.aspect = window.innerWidth / 2 / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    // Loading Santaclause from santa_claus folder
+    loader.load( './santa_claus/scene.gltf', function ( gltf ) {
+        santa = gltf.scene
+        santa.scale.set(5, 5, 5);
+        scene.add(santa);
     }, undefined, function ( error ) {
         console.error( error );
     } );
 
-    renderer.setScissorTest(true);
-
-    renderer.setScissor(0, 0, window.innerWidth / 2, window.innerHeight);
-    renderer.setViewport(0, 0, window.innerWidth / 2, window.innerHeight);
-    renderer.setClearColor(0x8EC8E8);
-    renderer.clear();
-
-    renderer.setScissor(window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
-    renderer.setViewport(window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
-    renderer.setClearColor(0x8E8E8E);
-    renderer.clear();
-
-    renderer.setScissorTest(false);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 10);
+    // Add light so everything is not black
+    const ambientLight = new THREE.AmbientLight(0x404040); // A bit brighter than before
     scene.add(ambientLight);
-  
+
+    // Added moonlight directional lighting
+    const moonLight = new THREE.DirectionalLight(0x9999bb, 1); // Brighter and slightly more blue
+    moonLight.position.set(-1, 1, 1);
+    scene.add(moonLight);
+
+    // Adding a fog effect to the scene as you get futher away from santa
+    scene.fog = new THREE.FogExp2(0x10101, 0.0013); // Exponential fog, very subtle
+
+    // Adding a nightsky background
+    function addSkyboxWithSingleImage(scene) {
+        const skyboxSize = 2000;
+        const skyboxGeometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
+        const loader = new THREE.TextureLoader();
+    
+        // Load a single image for all sides with error handling
+        loader.load(
+            'nightsky.jpg', // Ensure this path is correct
+            function (texture) {
+                const materials = [];
+                for (let i = 0; i < 6; i++) {
+                    materials.push(new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide }));
+                }
+                const skybox = new THREE.Mesh(skyboxGeometry, materials);
+                scene.add(skybox);
+            },
+            undefined, // onProgress callback not needed here
+            function (error) {
+                console.error('There was an error loading the texture:', error);
+            }
+        );
+    }
+    addSkyboxWithSingleImage(scene);
+    
+    // Creating Ground
+    function createSnowyGround() {
+        const geometry = new THREE.PlaneGeometry(2000, 2000); // Large enough to cover the camera's view
+        const material = new THREE.MeshLambertMaterial({ color: 0xf0f8ff }); // Soft white color
+        const ground = new THREE.Mesh(geometry, material);
+        ground.rotation.x = -Math.PI / 2; // Rotate the plane to be horizontal
+        ground.position.y = -20; // Adjust the vertical position to be below Santa
+        return ground;
+    }
+    const snowyGround = createSnowyGround();
+    scene.add(snowyGround);
+
+    // Creating Tree
+    function createTree() {
+        const coneGeometry = new THREE.ConeGeometry(5, 20, 32); // Cone for the leaves
+        const cylinderGeometry = new THREE.CylinderGeometry(2, 2, 10, 32); // Cylinder for the trunk
+        const leafMaterial = new THREE.MeshLambertMaterial({ color: 0x006400 }); // Dark green
+        const trunkMaterial = new THREE.MeshLambertMaterial({ color: 0x8b4513 }); // Brown
+        
+        const leaves = new THREE.Mesh(coneGeometry, leafMaterial);
+        leaves.position.y = 15; // Halfway up the trunk
+        
+        const trunk = new THREE.Mesh(cylinderGeometry, trunkMaterial);
+        
+        const tree = new THREE.Group();
+        tree.add(leaves);
+        tree.add(trunk);
+        
+        return tree;
+    }
+
+    // Tree position randomizer, allows for manipulation of number of trees
+    function addTrees(scene, numberOfTrees) {
+        for (let i = 0; i < numberOfTrees; i++) {
+            const tree = createTree();
+            tree.position.y = -15;
+            tree.position.x = Math.random() * 2000 - 1000; // Random position within bounds
+            tree.position.z = Math.random() * 2000 - 1000;
+            scene.add(tree);
+        }
+    }
+    addTrees(scene, 2000);
+
+    // Creating snowfall
+    function createSnowfall(scene) {
+        const particleCount = 1000; // Number of particles
+        const positions = new Float32Array(particleCount * 3); // Each particle has an x, y, and z coordinate
+    
+        // Bounds of the snowfall area
+        const bounds = 2000;
+        const height = 200;
+    
+        // Randomize initial positions
+        for (let i = 0; i < particleCount; i++) {
+            positions[i * 3] = Math.random() * bounds - bounds / 2; // x
+            positions[i * 3 + 1] = Math.random() * height; // y
+            positions[i * 3 + 2] = Math.random() * bounds - bounds / 2; // z
+        }
+    
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    
+        const material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.5, sizeAttenuation: true });
+        
+        const snowfall = new THREE.Points(geometry, material);
+        scene.add(snowfall);
+    
+        return snowfall;
+    }
+    let snowfall = createSnowfall(scene);
+
+    function animateSnowfall(snowfall) {
+        const positions = snowfall.geometry.attributes.position.array;
+        const count = positions.length / 3;
+    
+        for (let i = 0; i < count; i++) {
+            positions[i * 3 + 1] -= 1; // Move each snowflake down along the y-axis
+    
+            if (positions[i * 3 + 1] < 0) {
+                positions[i * 3 + 1] = 200; // Reset snowflake to top of the scene if it falls below 0
+            }
+        }
+    
+        snowfall.geometry.attributes.position.needsUpdate = true; // Important for updating the particles' positions
+    }
+
+    // GUI Parameters
     var params = {
         amplitudeX: 10, frequencyX: 2, phaseX: 0.0, dampingX: 0.9999,
         amplitudeY: 15, frequencyY: 3, phaseY: 0.0, dampingY: 0.9999,
         amplitudeZ: 5,  frequencyZ: 1.8, phaseZ: 0.5, dampingZ: 0.9999,
         amplitudeS: 5, frequencyS: 2, phaseS: 0.0, dampingS: 0.9999,
-        toggleTrail: true,
         reset: function() {
             t = 0;
             this.amplitudeX = 10; this.frequencyX = 2; this.phaseX = 0.0; this.dampingX = 0.9999;
             this.amplitudeY = 15; this.frequencyY = 3; this.phaseY = 0.0; this.dampingY = 0.9999;
             this.amplitudeZ = 5;  this.frequencyZ = 1.8; this.phaseZ = 0.5; this.dampingZ = 0.9999;
             this.amplitudeS = 5;  this.frequencyS = 2; this.phaseS = 0.0; this.dampingS = 0.9999;
-            this.toggleTrail = true;
-            if (dysonSphere) {
-                dysonSphere.position.set(0, 0, 0);
+            if (santa) {
+                santa.position.set(0, 0, 0);
             }
             renderer.clear();
 
             updateGuiDisplay();
-            toggleTrailControl.updateDisplay();
         }
     };
 
+    // GUI initialization and controls
     var gui = new GUI();
 
     var amplitudeFolder = gui.addFolder('Amplitude');
@@ -115,49 +222,32 @@ function init() {
         });
     }
 
-    var toggleTrailControl = gui.add(params, 'toggleTrail').name('Toggle Trail');
     gui.add(params, 'reset').name('Reset Animation');
 
     function animate() {
 
         requestAnimationFrame(animate);
+
+        controls.update();
+
         t += 0.01;
 
         let x = params.amplitudeX * Math.sin(params.frequencyX * t + params.phaseX) + params.amplitudeS * Math.sin(params.frequencyS * t + params.phaseS);
         let y = params.amplitudeY * Math.sin(params.frequencyY * t + params.phaseY);
         let z = params.amplitudeZ * Math.sin(params.frequencyZ * t + params.phaseZ);
 
-        dysonSphere.position.set(x, y, z);
+        santa.position.set(x, y+50, z);
 
         params.amplitudeX *= params.dampingX;
         params.amplitudeS *= params.dampingS;
         params.amplitudeY *= params.dampingY;
         params.amplitudeZ *= params.dampingZ;
         
-        if (!params.toggleTrail) {
-            renderer.clear();
-        }
-    
-        renderer.setScissorTest(true);
+        animateSnowfall(snowfall);
 
-        renderer.setScissor(0, 0, window.innerWidth / 2, window.innerHeight);
-        renderer.setViewport(0, 0, window.innerWidth / 2, window.innerHeight);
-        if (!params.toggleTrail || t === 0.01) {
-            renderer.setClearColor(0x8EC8E8);
-            renderer.clear();
-        }
-        renderer.render(scene, frontCamera);
+        renderer.clear();
 
-        renderer.setScissor(window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
-        renderer.setViewport(window.innerWidth / 2, 0, window.innerWidth / 2, window.innerHeight);
-        if (!params.toggleTrail || t === 0.01) {
-            renderer.setClearColor(0x8E8E8E);
-            renderer.clear();
-        }
-        renderer.render(scene, topCamera);
-
-        renderer.setScissorTest(false);
-
+        renderer.render(scene, camera);
     }
 
     animate();
