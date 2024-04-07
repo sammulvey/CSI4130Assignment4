@@ -277,48 +277,41 @@ function init() {
     addObject(scene, bounds/4, createPresent); // Adds presents to the scene
 
     // Creating snowfall
-    function createSnowfall(scene) {
-        const particleCount = 5000; // Number of particles
-        const positions = new Float32Array(particleCount * 3); // Each particle has an x, y, and z coordinate
-    
-        // Bounds of the snowfall area
+    function createSnowfall(scene, particleCount) {
+        const positions = new Float32Array(particleCount * 3);
         const height = 200;
-    
-        // Randomize initial positions
+        
         for (let i = 0; i < particleCount; i++) {
-            positions[i * 3] = Math.random() * bounds - bounds / 2; // x
-            positions[i * 3 + 1] = Math.random() * height; // y
-            positions[i * 3 + 2] = Math.random() * bounds - bounds / 2; // z
+            positions[i * 3] = Math.random() * bounds - bounds / 2;
+            positions[i * 3 + 1] = Math.random() * height;
+            positions[i * 3 + 2] = Math.random() * bounds - bounds / 2;
         }
-    
+        
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    
         const material = new THREE.PointsMaterial({ color: 0xFFFFFF, size: 1.5, sizeAttenuation: true });
-        
         const snowfall = new THREE.Points(geometry, material);
-        scene.add(snowfall);
-    
+        
         return snowfall;
     }
     let snowfall = createSnowfall(scene);
+    scene.add(snowfall);
 
     function animateSnowfall(snowfall) {
         const positions = snowfall.geometry.attributes.position.array;
         const count = positions.length / 3;
     
         for (let i = 0; i < count; i++) {
-            positions[i * 3 + 1] -= 1; // Move each snowflake down along the y-axis
-            
-            // Skew snowflake in the x direction to simulate wind or movement
-            positions[i * 3] += 0.2; // Adjust this value to control the skew strength
+            positions[i * 3 + 1] -= 2 * params.sceneSpeed; // Move each snowflake down along the y-axis
+
+            positions[i * 3] += 0.4 * params.sceneSpeed; // Adjust this value to control the skew strength
     
             // Reset snowflake to top of the scene if it falls below 0
             if (positions[i * 3 + 1] < 0) {
                 positions[i * 3 + 1] = 200; // Reset y to top
                 positions[i * 3] = Math.random() * bounds - bounds / 2; // Randomize x position for variety
             }
-            
+    
             // Loop snowflake x position if it goes beyond bounds, simulating continuous space
             if (positions[i * 3] > bounds / 2) {
                 positions[i * 3] = -bounds / 2;
@@ -329,6 +322,7 @@ function init() {
     
         snowfall.geometry.attributes.position.needsUpdate = true; // Important for updating the particles' positions
     }
+    
 
     // GUI Parameters
     var params = {
@@ -337,6 +331,12 @@ function init() {
         amplitudeZ: 5,  frequencyZ: 1.8, phaseZ: 0.5, dampingZ: 0.9999,
         amplitudeS: 5, frequencyS: 2, phaseS: 0.0, dampingS: 0.9999,
         sceneSpeed: 0.5,
+        snowParticles: 5000,
+        updateSnowfall: function() {
+            if (snowfall) scene.remove(snowfall); // Remove existing snowfall
+            snowfall = createSnowfall(scene, this.snowParticles); // Create new snowfall with updated particle count
+            scene.add(snowfall);
+        },
         reset: function() {
             t = 0;
             this.amplitudeX = 10; this.frequencyX = 2; this.phaseX = 0.0; this.dampingX = 0.9999;
@@ -351,6 +351,8 @@ function init() {
             updateGuiDisplay();
         }
     };
+
+    params.updateSnowfall();
 
     // GUI initialization and controls
     var gui = new GUI();
@@ -387,9 +389,12 @@ function init() {
             });
         });
     }
-
-    gui.add(params, 'reset').name('Reset Animation');
+    gui.add(params, 'snowParticles', 0, 20000).name('Snow Particles').onChange(function() {
+        params.updateSnowfall();
+    });
     gui.add(params, 'sceneSpeed', 0, 1).name('Scene Speed');
+    gui.add(params, 'reset').name('Reset Animation');
+
 
     function animate() {
 
