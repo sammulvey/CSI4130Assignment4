@@ -14,6 +14,7 @@ let santa = 0;
 var bounds = 2000;
 const loader = new GLTFLoader();
 
+// Pre loading of the textures for better performance than loading them for every present
 const textureLoader = new THREE.TextureLoader();
 const wrappingPaperTexture1 = textureLoader.load('./presents/goldpresent.png');
 const wrappingPaperTexture2 = textureLoader.load('./presents/greenpresent.png');
@@ -33,18 +34,19 @@ function init() {
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
     renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
     renderer.autoClearColor = false;
-    renderer.setClearColor(0x8EC8E8);
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
-
-    camera.position.set(0, 110, 150);
-    camera.lookAt(scene.position);
 
     // Initialize OrbitControls
     const controls = new OrbitControls(camera, renderer.domElement);
 
     camera.aspect = window.innerWidth / 2 / window.innerHeight;
     camera.updateProjectionMatrix();
+
+    camera.position.set(0, 130, 150);
+    camera.lookAt(0, 50, 0);
+    controls.target.set(0, 50, 0); // This aligns OrbitControls with the camera's lookAt
+    controls.update(); // This might be needed to apply the changes immediately
 
     // Loading Santaclause from santa_claus folder
     loader.load( './santa_claus/scene.gltf', function ( gltf ) {
@@ -65,31 +67,25 @@ function init() {
     scene.add(moonLight);
 
     // Adding a fog effect to the scene as you get futher away from santa
-    scene.fog = new THREE.FogExp2(0x10101, 0.0013); // Exponential fog, very subtle
+    scene.fog = new THREE.FogExp2(0x10101, 0.0011);
 
     // Adding a nightsky background
     function addSkybox(scene) {
-        const skyboxSize = bounds;
-        const skyboxGeometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
-        const loader = new THREE.TextureLoader();
+        const modelPath = './skybox/scene.gltf';
     
-        // Load a single image for all sides with error handling
-        loader.load(
-            'nightsky.jpg', // Ensure this path is correct
-            function (texture) {
-                const materials = [];
-                for (let i = 0; i < 6; i++) {
-                    materials.push(new THREE.MeshBasicMaterial({ map: texture, side: THREE.BackSide }));
-                }
-                const skybox = new THREE.Mesh(skyboxGeometry, materials);
-                scene.add(skybox);
-            },
-            undefined, // onProgress callback not needed here
-            function (error) {
-                console.error('There was an error loading the texture:', error);
-            }
-        );
-    }
+        // Use GLTFLoader to load the model
+        const gltfLoader = new GLTFLoader();
+        gltfLoader.load(modelPath, function(gltf) {
+            const skyboxModel = gltf.scene;
+    
+            skyboxModel.scale.set(1000, 1000, 1000); // Adjust scale as needed
+    
+            scene.add(skyboxModel);
+        }, undefined, function(error) {
+            console.error('An error happened while loading the model:', error);
+        });
+    }    
+    
     addSkybox(scene);
     
     // Creating Ground
@@ -216,7 +212,7 @@ function init() {
 
     function createPresent() {
 
-        const size = Math.random() * 3 + 2; // Presents will have their sizes ranging from 2 to 4
+        const size = Math.random() * 3 + 2; // Presents will have their sizes randomized
 
         // Box
         const selectedTexture = wrappingPaperTextures[Math.floor(Math.random() * wrappingPaperTextures.length)];
@@ -279,7 +275,7 @@ function init() {
     // Creating snowfall
     function createSnowfall(scene, particleCount) {
         const positions = new Float32Array(particleCount * 3);
-        const height = 200;
+        const height = 2000;
         
         for (let i = 0; i < particleCount; i++) {
             positions[i * 3] = Math.random() * bounds - bounds / 2;
@@ -331,7 +327,7 @@ function init() {
         amplitudeZ: 5,  frequencyZ: 1.8, phaseZ: 0.5, dampingZ: 0.9999,
         amplitudeS: 5, frequencyS: 2, phaseS: 0.0, dampingS: 0.9999,
         sceneSpeed: 0.5,
-        snowParticles: 5000,
+        snowParticles: 15000,
         updateSnowfall: function() {
             if (snowfall) scene.remove(snowfall); // Remove existing snowfall
             snowfall = createSnowfall(scene, this.snowParticles); // Create new snowfall with updated particle count
@@ -346,6 +342,11 @@ function init() {
             if (santa) {
                 santa.position.set(0, 0, 0);
             }
+            camera.position.set(0, 130, 150);
+            camera.lookAt(0, 50, 0);
+            controls.target.set(0, 50, 0); // This aligns OrbitControls with the camera's lookAt
+            controls.update(); // This might be needed to apply the changes immediately
+
             renderer.clear();
 
             updateGuiDisplay();
@@ -389,11 +390,11 @@ function init() {
             });
         });
     }
-    gui.add(params, 'snowParticles', 0, 20000).name('Snow Particles').onChange(function() {
+    gui.add(params, 'snowParticles', 0, 50000).name('Snow Particles').onChange(function() {
         params.updateSnowfall();
     });
     gui.add(params, 'sceneSpeed', 0, 1).name('Scene Speed');
-    gui.add(params, 'reset').name('Reset Animation');
+    gui.add(params, 'reset').name('Reset Animation and Camera');
 
 
     function animate() {
