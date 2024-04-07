@@ -7,15 +7,16 @@ import { GUI } from 'dat.gui';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-
 let camera = 0;
 let renderer = 0;
 let t = 0;
 let santa = 0;
+var bounds = 2000;
 const loader = new GLTFLoader();
 
 function init() {
 
+    // Camera setup
     var scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
     renderer = new THREE.WebGLRenderer({ preserveDrawingBuffer: true });
@@ -56,7 +57,7 @@ function init() {
 
     // Adding a nightsky background
     function addSkyboxWithSingleImage(scene) {
-        const skyboxSize = 2000;
+        const skyboxSize = bounds;
         const skyboxGeometry = new THREE.BoxGeometry(skyboxSize, skyboxSize, skyboxSize);
         const loader = new THREE.TextureLoader();
     
@@ -81,7 +82,7 @@ function init() {
     
     // Creating Ground
     function createSnowyGround() {
-        const geometry = new THREE.PlaneGeometry(2000, 2000); // Large enough to cover the camera's view
+        const geometry = new THREE.PlaneGeometry(bounds, bounds); // Large enough to cover the camera's view
         const material = new THREE.MeshLambertMaterial({ color: 0xf0f8ff }); // Soft white color
         const ground = new THREE.Mesh(geometry, material);
         ground.rotation.x = -Math.PI / 2; // Rotate the plane to be horizontal
@@ -107,6 +108,8 @@ function init() {
         tree.add(leaves);
         tree.add(trunk);
         
+        tree.isTree = true;
+
         return tree;
     }
 
@@ -115,12 +118,12 @@ function init() {
         for (let i = 0; i < numberOfTrees; i++) {
             const tree = createTree();
             tree.position.y = -15;
-            tree.position.x = Math.random() * 2000 - 1000; // Random position within bounds
-            tree.position.z = Math.random() * 2000 - 1000;
+            tree.position.x = Math.random() * bounds - bounds/2; // Random position within bounds
+            tree.position.z = Math.random() * bounds - bounds/2;
             scene.add(tree);
         }
     }
-    addTrees(scene, 2000);
+    addTrees(scene, bounds);
 
     // Creating snowfall
     function createSnowfall(scene) {
@@ -128,7 +131,6 @@ function init() {
         const positions = new Float32Array(particleCount * 3); // Each particle has an x, y, and z coordinate
     
         // Bounds of the snowfall area
-        const bounds = 2000;
         const height = 200;
     
         // Randomize initial positions
@@ -230,6 +232,18 @@ function init() {
 
         controls.update();
 
+        animateSnowfall(snowfall);
+
+        // Move trees to simulate Santa moving forward
+        scene.traverse(function(object) {
+            if (object.isTree) { // Ensure you set this flag when creating trees
+                object.position.x += 0.5; // Adjust speed as necessary
+                if (object.position.x > bounds/2) { // Assuming 1000 is the boundary of your scene along the z-axis
+                    object.position.x = -bounds/2;
+                }
+            }
+        });
+
         t += 0.01;
 
         let x = params.amplitudeX * Math.sin(params.frequencyX * t + params.phaseX) + params.amplitudeS * Math.sin(params.frequencyS * t + params.phaseS);
@@ -242,16 +256,12 @@ function init() {
         params.amplitudeS *= params.dampingS;
         params.amplitudeY *= params.dampingY;
         params.amplitudeZ *= params.dampingZ;
-        
-        animateSnowfall(snowfall);
 
         renderer.clear();
 
         renderer.render(scene, camera);
     }
-
     animate();
-
 }
 
 window.onload = init;
