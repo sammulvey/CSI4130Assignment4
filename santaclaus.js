@@ -46,7 +46,7 @@ function init() {
     camera.position.set(0, 130, 150);
     camera.lookAt(0, 50, 0);
     controls.target.set(0, 50, 0); // This aligns OrbitControls with the camera's lookAt
-    controls.update(); // This might be needed to apply the changes immediately
+    controls.update();
 
     // Loading Santaclause from santa_claus folder
     loader.load( './santa_claus/scene.gltf', function ( gltf ) {
@@ -58,11 +58,11 @@ function init() {
     } );
 
     // Add light so everything is not black
-    const ambientLight = new THREE.AmbientLight(0x404040); // A bit brighter than before
+    const ambientLight = new THREE.AmbientLight(0x404040);
     scene.add(ambientLight);
 
     // Added moonlight directional lighting
-    const moonLight = new THREE.DirectionalLight(0x9999bb, 1); // Brighter and slightly more blue
+    const moonLight = new THREE.DirectionalLight(0x9999bb, 1);
     moonLight.position.set(-1, 1, 1);
     scene.add(moonLight);
 
@@ -78,7 +78,7 @@ function init() {
         gltfLoader.load(modelPath, function(gltf) {
             const skyboxModel = gltf.scene;
     
-            skyboxModel.scale.set(1000, 1000, 1000); // Adjust scale as needed
+            skyboxModel.scale.set(1000, 1000, 1000);
     
             scene.add(skyboxModel);
         }, undefined, function(error) {
@@ -90,7 +90,7 @@ function init() {
     
     // Creating Ground
     function createSnowyGround() {
-        const geometry = new THREE.PlaneGeometry(bounds, bounds); // Large enough to cover the camera's view
+        const geometry = new THREE.PlaneGeometry(bounds, bounds);
         const material = new THREE.MeshLambertMaterial({ color: 0xf0f8ff }); // Soft white color
         const ground = new THREE.Mesh(geometry, material);
         ground.rotation.x = -Math.PI / 2; // Rotate the plane to be horizontal
@@ -300,7 +300,7 @@ function init() {
         for (let i = 0; i < count; i++) {
             positions[i * 3 + 1] -= 2 * params.sceneSpeed; // Move each snowflake down along the y-axis
 
-            positions[i * 3] += 0.4 * params.sceneSpeed; // Adjust this value to control the skew strength
+            positions[i * 3] += 0.4 * params.sceneSpeed; // Skew strength
     
             // Reset snowflake to top of the scene if it falls below 0
             if (positions[i * 3 + 1] < 0) {
@@ -316,7 +316,7 @@ function init() {
             }
         }
     
-        snowfall.geometry.attributes.position.needsUpdate = true; // Important for updating the particles' positions
+        snowfall.geometry.attributes.position.needsUpdate = true;
     }
     
 
@@ -345,7 +345,7 @@ function init() {
             camera.position.set(0, 130, 150);
             camera.lookAt(0, 50, 0);
             controls.target.set(0, 50, 0); // This aligns OrbitControls with the camera's lookAt
-            controls.update(); // This might be needed to apply the changes immediately
+            controls.update();
 
             renderer.clear();
 
@@ -405,7 +405,7 @@ function init() {
 
         animateSnowfall(snowfall);
 
-        // Move trees to simulate Santa moving forward
+        // Move all ground objects to simulate Santa moving forward
         scene.traverse(function(object) {
             if (object.isTree || object.isSnowman || object.isPresent) { // Moves trees, snowmen, and presents.
                 object.position.x += 1 * params.sceneSpeed;
